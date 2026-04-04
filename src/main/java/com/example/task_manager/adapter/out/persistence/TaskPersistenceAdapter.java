@@ -7,6 +7,8 @@ import com.example.task_manager.application.port.out.TaskRepositoryPort;
 import com.example.task_manager.domain.model.Task;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class TaskPersistenceAdapter implements TaskRepositoryPort {
 
@@ -23,5 +25,11 @@ public class TaskPersistenceAdapter implements TaskRepositoryPort {
         TaskJpaEntity entity = taskPersistenceMapper.toJpaEntity(task);
         TaskJpaEntity savedEntity = taskJpaRepository.save(entity);
         return taskPersistenceMapper.toDomainEntity(savedEntity);
+    }
+
+    @Override
+    public Optional<Task> findById(Long id) {
+        return taskJpaRepository.findById(id)
+                .map(taskPersistenceMapper::toDomainEntity);
     }
 }

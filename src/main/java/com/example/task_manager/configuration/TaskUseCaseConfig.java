@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class CreateTaskConfig {
+public class TaskUseCaseConfig {
 
     @Bean
     public CreateTaskUseCase createTaskUseCase(TaskRepositoryPort taskRepositoryPort, TaskApplicationMapper taskApplicationMapper) {

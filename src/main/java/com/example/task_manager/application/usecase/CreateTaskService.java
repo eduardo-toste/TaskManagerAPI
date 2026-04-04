@@ -27,6 +27,6 @@ public class CreateTaskService implements CreateTaskUseCase {
 
         Task savedTask = taskRepositoryPort.save(task);
 
-        return taskApplicationMapper.toTaskOutput(task);
+        return taskApplicationMapper.toTaskOutput(savedTask);
     }
 }

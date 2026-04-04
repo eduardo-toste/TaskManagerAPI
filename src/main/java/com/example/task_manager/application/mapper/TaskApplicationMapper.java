@@ -2,6 +2,7 @@ package com.example.task_manager.application.mapper;
 
 import com.example.task_manager.application.dto.TaskOutput;
 import com.example.task_manager.domain.model.Task;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,6 +15,10 @@ public class TaskApplicationMapper {
                 task.getDescription(),
                 task.getStatus()
         );
+    }
+
+    public Page<TaskOutput> toTaskOutputPage(Page<Task> tasks) {
+        return tasks.map(this::toTaskOutput);
     }
 
 }

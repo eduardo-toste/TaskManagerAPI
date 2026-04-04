@@ -5,27 +5,34 @@ import com.example.task_manager.adapter.in.web.request.CreateTaskRequest;
 import com.example.task_manager.adapter.in.web.response.TaskResponse;
 import com.example.task_manager.application.dto.TaskOutput;
 import com.example.task_manager.application.port.in.CreateTaskUseCase;
+import com.example.task_manager.application.port.in.FindTaskByIdUseCase;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
 
     private final CreateTaskUseCase createTaskUseCase;
+    private final FindTaskByIdUseCase findTaskByIdUseCase;
     private final TaskWebMapper taskWebMapper;
 
-    public TaskController(CreateTaskUseCase createTaskUseCase,  TaskWebMapper taskWebMapper) {
+    public TaskController(CreateTaskUseCase createTaskUseCase,  TaskWebMapper taskWebMapper,  FindTaskByIdUseCase findTaskByIdUseCase) {
         this.createTaskUseCase = createTaskUseCase;
         this.taskWebMapper = taskWebMapper;
+        this.findTaskByIdUseCase = findTaskByIdUseCase;
     }
 
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(@RequestBody CreateTaskRequest request) {
         TaskOutput output = createTaskUseCase.createTask(taskWebMapper.toCommand(request));
+        TaskResponse response = taskWebMapper.toResponse(output);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
+        TaskOutput output = findTaskByIdUseCase.getTaskById(id);
         TaskResponse response = taskWebMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }

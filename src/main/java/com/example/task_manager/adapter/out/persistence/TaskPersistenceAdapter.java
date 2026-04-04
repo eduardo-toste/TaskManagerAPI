@@ -5,6 +5,8 @@ import com.example.task_manager.adapter.out.persistence.mapper.TaskPersistenceMa
 import com.example.task_manager.adapter.out.persistence.repository.TaskJpaRepository;
 import com.example.task_manager.application.port.out.TaskRepositoryPort;
 import com.example.task_manager.domain.model.Task;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -25,6 +27,12 @@ public class TaskPersistenceAdapter implements TaskRepositoryPort {
         TaskJpaEntity entity = taskPersistenceMapper.toJpaEntity(task);
         TaskJpaEntity savedEntity = taskJpaRepository.save(entity);
         return taskPersistenceMapper.toDomainEntity(savedEntity);
+    }
+
+    @Override
+    public Page<Task> findTasks(Pageable pageable) {
+        Page<TaskJpaEntity> page = taskJpaRepository.findAll(pageable);
+        return taskPersistenceMapper.toDomainPage(page);
     }
 
     @Override

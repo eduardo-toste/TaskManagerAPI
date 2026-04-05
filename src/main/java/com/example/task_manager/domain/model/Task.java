@@ -10,11 +10,11 @@ public class Task {
     private String description;
     private TaskStatus status;
 
-    public Task(Long id, String title, String description) {
+    public Task(Long id, String title, String description, TaskStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
-        this.status = TaskStatus.PENDING;
+        this.status = status;
     }
 
     public Long getId() {

@@ -5,6 +5,7 @@ import com.example.task_manager.application.dto.TaskOutput;
 import com.example.task_manager.application.mapper.TaskApplicationMapper;
 import com.example.task_manager.application.port.in.CreateTaskUseCase;
 import com.example.task_manager.application.port.out.TaskRepositoryPort;
+import com.example.task_manager.domain.enums.TaskStatus;
 import com.example.task_manager.domain.model.Task;
 
 public class CreateTaskService implements CreateTaskUseCase {
@@ -22,7 +23,8 @@ public class CreateTaskService implements CreateTaskUseCase {
         Task task = new Task(
                 null,
                 command.title(),
-                command.description()
+                command.description(),
+                TaskStatus.PENDING
         );
 
         Task savedTask = taskRepositoryPort.save(task);

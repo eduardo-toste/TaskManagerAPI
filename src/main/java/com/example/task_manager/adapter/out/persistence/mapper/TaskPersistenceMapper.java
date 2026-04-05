@@ -21,7 +21,8 @@ public class TaskPersistenceMapper {
         return new Task(
                 entity.getId(),
                 entity.getTitle(),
-                entity.getDescription()
+                entity.getDescription(),
+                entity.getStatus()
         );
     }
 

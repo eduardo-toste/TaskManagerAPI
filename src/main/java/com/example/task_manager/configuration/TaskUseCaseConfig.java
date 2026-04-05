@@ -1,9 +1,11 @@
 package com.example.task_manager.configuration;
 
 import com.example.task_manager.application.mapper.TaskApplicationMapper;
+import com.example.task_manager.application.port.in.CompleteTaskUseCase;
 import com.example.task_manager.application.port.in.CreateTaskUseCase;
 import com.example.task_manager.application.port.in.FindTaskUseCase;
 import com.example.task_manager.application.port.out.TaskRepositoryPort;
+import com.example.task_manager.application.usecase.CompleteTaskService;
 import com.example.task_manager.application.usecase.CreateTaskService;
 import com.example.task_manager.application.usecase.FindTaskService;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +22,11 @@ public class TaskUseCaseConfig {
     @Bean
     public FindTaskUseCase findTaskByIdUseCase(TaskRepositoryPort taskRepositoryPort, TaskApplicationMapper taskApplicationMapper) {
         return new FindTaskService(taskRepositoryPort,  taskApplicationMapper);
+    }
+
+    @Bean
+    public CompleteTaskUseCase completeTaskUseCase(TaskRepositoryPort taskRepositoryPort, TaskApplicationMapper taskApplicationMapper) {
+        return new CompleteTaskService(taskRepositoryPort, taskApplicationMapper);
     }
 
 }

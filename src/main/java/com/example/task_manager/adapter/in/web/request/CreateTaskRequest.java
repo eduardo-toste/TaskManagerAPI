@@ -1,9 +1,11 @@
 package com.example.task_manager.adapter.in.web.request;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record CreateTaskRequest(
 
-        String title,
-        String description
+        @NotBlank String title,
+        @NotBlank String description
 
 ) {
 }

@@ -7,6 +7,7 @@ import com.example.task_manager.application.dto.TaskOutput;
 import com.example.task_manager.application.port.in.CompleteTaskUseCase;
 import com.example.task_manager.application.port.in.CreateTaskUseCase;
 import com.example.task_manager.application.port.in.FindTaskUseCase;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +35,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@RequestBody CreateTaskRequest request) {
+    public ResponseEntity<TaskResponse> createTask(@RequestBody @Valid CreateTaskRequest request) {
         TaskOutput output = createTaskUseCase.createTask(taskWebMapper.toCommand(request));
         TaskResponse response = taskWebMapper.toResponse(output);
         return ResponseEntity.ok(response);

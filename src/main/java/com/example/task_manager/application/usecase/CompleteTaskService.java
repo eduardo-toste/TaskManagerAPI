@@ -1,6 +1,7 @@
 package com.example.task_manager.application.usecase;
 
 import com.example.task_manager.application.dto.TaskOutput;
+import com.example.task_manager.application.exception.TaskNotFoundException;
 import com.example.task_manager.application.mapper.TaskApplicationMapper;
 import com.example.task_manager.application.port.in.CompleteTaskUseCase;
 import com.example.task_manager.application.port.out.TaskRepositoryPort;
@@ -19,7 +20,7 @@ public class CompleteTaskService implements CompleteTaskUseCase {
     @Override
     public TaskOutput completeTask(Long taskId) {
         Task task = taskRepositoryPort.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(TaskNotFoundException::new);
 
         task.complete();
         Task savedTask = taskRepositoryPort.save(task);

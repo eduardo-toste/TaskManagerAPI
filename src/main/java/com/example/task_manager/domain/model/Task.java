@@ -43,7 +43,7 @@ public class Task {
 
     public void complete() {
         if (this.status == TaskStatus.COMPLETED) {
-            throw new TaskAlreadyCompletedException("Task is already completed.");
+            throw new TaskAlreadyCompletedException();
         }
 
         this.status = TaskStatus.COMPLETED;

@@ -23,8 +23,7 @@ public class CreateTaskService implements CreateTaskUseCase {
         Task task = new Task(
                 null,
                 command.title(),
-                command.description(),
-                TaskStatus.PENDING
+                command.description()
         );
 
         Task savedTask = taskRepositoryPort.save(task);

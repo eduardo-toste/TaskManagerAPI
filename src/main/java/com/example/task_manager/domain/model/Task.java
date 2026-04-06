@@ -17,6 +17,13 @@ public class Task {
         this.status = status;
     }
 
+    public Task(Long id, String title, String description) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.status = TaskStatus.PENDING;
+    }
+
     public Long getId() {
         return id;
     }

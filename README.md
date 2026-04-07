@@ -34,6 +34,7 @@ O projeto segue a **Arquitetura Hexagonal**, também conhecida como *Ports & Ada
 ┌────────────────────────────────────────────────────────────────┐
 │                        adapter/in/web                          │
 │         (HTTP) ──► TaskController ──► TaskWebMapper            │
+│         (Erros) ◄── GlobalExceptionHandler ◄── ErrorResponse  │
 └───────────────────────────┬────────────────────────────────────┘
                             │  UseCase Interfaces (porta de entrada)
 ┌───────────────────────────▼────────────────────────────────────┐
@@ -76,8 +77,12 @@ src/main/java/com/example/task_manager/
 │   ├── in/
 │   │   └── web/
 │   │       ├── TaskController.java              ← Endpoints REST
+│   │       ├── handler/
+│   │       │   ├── GlobalExceptionHandler.java  ← Tratamento centralizado de exceções (@RestControllerAdvice)
+│   │       │   ├── ErrorResponse.java           ← Corpo padronizado de erro (record)
+│   │       │   └── ErrorResponseFactory.java    ← Fábrica do ErrorResponse
 │   │       ├── mapper/TaskWebMapper.java         ← Converte request/response ↔ command/output
-│   │       ├── request/CreateTaskRequest.java    ← Body de entrada (record)
+│   │       ├── request/CreateTaskRequest.java    ← Body de entrada com validação (@NotBlank)
 │   │       └── response/TaskResponse.java        ← Body de saída (record)
 │   └── out/
 │       └── persistence/
@@ -141,6 +146,17 @@ Base URL: `http://localhost:8080`
 }
 ```
 
+**Response `400 Bad Request`** (campos em branco ou ausentes):
+```json
+{
+  "timestamp": "2026-04-07T10:00:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "title: must not be blank",
+  "path": "/tasks"
+}
+```
+
 ---
 
 ### `GET /tasks` — Listar tarefas (paginado)
@@ -183,6 +199,17 @@ Exemplo: `GET /tasks/1`
 }
 ```
 
+**Response `404 Not Found`** (ID inexistente):
+```json
+{
+  "timestamp": "2026-04-07T10:00:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Task not found.",
+  "path": "/tasks/99"
+}
+```
+
 ---
 
 ### `PATCH /tasks/{id}/complete` — Completar uma tarefa
@@ -199,9 +226,41 @@ Exemplo: `PATCH /tasks/1/complete`
 }
 ```
 
-> ⚠️ Se a tarefa já estiver com status `COMPLETED`, a operação lança `TaskAlreadyCompletedException`.
+**Response `409 Conflict`** (tarefa já concluída):
+```json
+{
+  "timestamp": "2026-04-07T10:00:00",
+  "status": 409,
+  "error": "Conflict",
+  "message": "Task is already completed.",
+  "path": "/tasks/1/complete"
+}
+```
 
 ---
+
+## 🚨 Tratamento de Erros
+
+Todas as exceções são interceptadas pelo `GlobalExceptionHandler` (`@RestControllerAdvice`) e retornam um corpo padronizado:
+
+```json
+{
+  "timestamp": "2026-04-07T10:00:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Task not found.",
+  "path": "/tasks/99"
+}
+```
+
+| Exceção | Status HTTP | Cenário |
+|---|---|---|
+| `TaskNotFoundException` | `404 Not Found` | ID inexistente no banco |
+| `TaskAlreadyCompletedException` | `409 Conflict` | Tarefa já está `COMPLETED` |
+| `MethodArgumentNotValidException` | `400 Bad Request` | Falha no `@Valid` do request body |
+| `ConstraintViolationException` | `400 Bad Request` | Violação de constraint de validação |
+| `HttpMessageNotReadableException` | `400 Bad Request` | JSON malformado ou ilegível |
+| `Exception` | `500 Internal Server Error` | Qualquer erro inesperado |
 
 ## 🔄 Fluxo de uma Requisição
 
@@ -232,6 +291,57 @@ Exemplo: `PATCH /tasks/1/complete`
 5.  Se já estiver COMPLETED → TaskAlreadyCompletedException é lançada
 6.  TaskRepositoryPort.save(task) persiste o novo status
 7.  TaskOutput é retornado com status = COMPLETED
+```
+
+---
+
+## 🧪 Testes
+
+O projeto possui cobertura de testes em todas as camadas da arquitetura.
+
+### Estrutura de Testes
+
+```
+src/test/java/com/example/task_manager/
+│
+├── domain/
+│   └── model/
+│       └── TaskTest.java                        ← Testes unitários do domínio (sem Spring)
+│
+├── application/
+│   └── usecase/
+│       ├── CreateTaskServiceTest.java           ← Teste unitário com mock do repositório
+│       ├── FindTaskServiceTest.java             ← Teste unitário com mock do repositório
+│       └── CompleteTaskServiceTest.java         ← Teste unitário com mock do repositório
+│
+├── adapter/
+│   ├── in/
+│   │   └── web/
+│   │       └── TaskControllerTest.java          ← Teste da camada web com MockMvc (@WebMvcTest)
+│   └── out/
+│       └── persistence/
+│           └── TaskPersistenceAdapterTest.java  ← Teste de integração com banco H2 (@DataJpaTest)
+│
+└── integration/
+    └── TaskFlowIntegrationTest.java             ← Teste end-to-end com @SpringBootTest
+```
+
+### Tipos de Teste
+
+| Arquivo | Tipo | Estratégia |
+|---|---|---|
+| `TaskTest` | Unitário | Sem nenhuma dependência externa — testa regras de domínio puras |
+| `CreateTaskServiceTest` | Unitário | Mockito — isola o service do repositório e do mapper |
+| `FindTaskServiceTest` | Unitário | Mockito — cobre busca paginada, por ID e not found |
+| `CompleteTaskServiceTest` | Unitário | Mockito — cobre sucesso, not found e já concluída |
+| `TaskControllerTest` | Camada Web | `@WebMvcTest` + MockMvc — testa rotas, status HTTP e JSON de resposta/erro |
+| `TaskPersistenceAdapterTest` | Integração JPA | `@DataJpaTest` — testa save, findById e findTasks contra H2 real |
+| `TaskFlowIntegrationTest` | End-to-End | `@SpringBootTest` — sobe contexto completo e valida fluxos reais |
+
+### Rodando os Testes
+
+```bash
+./mvnw test
 ```
 
 ---
